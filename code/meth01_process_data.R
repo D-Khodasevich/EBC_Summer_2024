@@ -38,21 +38,23 @@ meth$manifest[4001:4010]
 #' of `chr` and `mapinfo` gives the genomic coordinates of the targeted loci.
 #' The column `probe_type` refers to the type of loci that are targeted by these
 #' probes. Here, all the probes are CpG sites, i.e., "cg".
-#'
-#' **QUESTION:** What other type of loci besides CpG sites are there?
-#'
+
+#' QUESTION: What other type of loci besides CpG sites are there?
+#' ANSWER: There are also CHH sites and SNP probes
+
 #' The column `channel` tells us the color channel and Infinium probe design type.
 #' "Grn" and "Red" imply Infinium Type I, "Both" implies Type II.
 #'
 #' `addressU` and `addressM` are the unique identifier of the beads (a bead is not
 #' is not the same as a probe).
 #'
-#' **QUESTION:** Why is the column `addressM` missing for entries with
+#' QUESTION: Why is the column `addressM` missing for entries with
 #' `channel=="Both"`?
-#'
+#' ANSWER: As type II probes use the same bead for methylated and unmethylated
+#' signal, the information would be redundant
+
 #' Some columns (`index`,`OOBi`,`Ui`,`Mi`) are used for the internal workings of
 #' the `ewastools` package and not of interest for the user
-
 
 #' Fluorescence intensities observed at the bead locations are stores in
 #' `M` (methylated) and `U` (unmethylated) (`U`).
@@ -64,9 +66,11 @@ dim(meth$M)
 meth$U[238:240,1:3]
 meth$M[238:240,1:3]
 
-#' **QUESTION:** Comparing corresponding entries across `U` and `M` above, what can
+#' QUESTION: Comparing corresponding entries across `U` and `M` above, what can
 #' you infer about these loci?
-#'
+#' ANSWER: For the middle probe, the methylated intensities are much higher than the
+#' unmethylated intensities. This probe in methylated across the three samples
+
 #' Because of the random assembly of the chips, the copy number can vary for each
 #' bead, and the values in `U` and `M` actually are averages. Copy numbers are
 #' stored in `V` (corresponding to `U`) and `N` (corresponding to `M`). For some
@@ -74,13 +78,15 @@ meth$M[238:240,1:3]
 dim(meth$N)
 meth$N[238:240,1:3]
 
-#' **QUESTION:** How many probes are missing in the first sample?
-#'
-#' **QUESTION:** For type II probes, the entries in `N` and `V` are always the same. Why?
-#'
-#' The `meth` list includes some for elements, among them matrices and a manifest
+#' QUESTION: How many probes are missing in the first sample?
+#' ANSWER: 5 probes has no beads present for either the unmethylated or methylated type
+ 
+#' QUESTION: For type II probes, the entries in `N` and `V` are always the same. Why?
+#' ANSWER: Because the same beads are used to mesaure methylated and unmethylated signal
+
+#' The `meth` list includes more elements, among them matrices and a manifest
 #' for control probes. The control probes don't target CpG sites, but are used to
-#' monitor the various experimental steps or for preprocessing. We will make use
+#' monitor the various experimental steps or are used for preprocessing. We will make use
 #' of them below for quality control.
 
 
@@ -103,8 +109,16 @@ meth %>% control_metrics %>% sample_failure -> pheno$failed
 #' The line above is equivalent to (i.e., could be alternatively written as)
 # pheno$failed = sample_failure(control_metrics(meth))
 
-#' **QUESTION:** How many samples failed this check?
-
+#' QUESTION: How many samples failed this check?
+#' ANSWER: All but 2 samples failed this check. The reason for this is that the
+#' hybridization control probes are incorrectly labeled. I have encountered this
+#' a few times. We are therefore ignoring these control probes and rerun the QC
+#' check
+hyb = meth$controls[group == "HYBRIDIZATION", index]
+meth$ctrlG[hyb,] = NA
+meth$ctrlR[hyb,] = NA
+meth %>% control_metrics %>% sample_failure -> pheno$failed
+#' Now all samples pass this first QC step
 
 # ------------------------
 #' ### Detection p-values
@@ -118,7 +132,7 @@ meth = ewastools::detectionP(meth)
 #' Comparison of detection p-values for probes targeting the Y chromosome across
 #' males and females
 #' Get the indices of the probes
-chrY = meth$manifest[chr=='Y',index]
+chrY = meth$manifest[chr=='Y', index]
 #' There are 537 such probes on EPICv1
 length(chrY)
 #' Retrieve the corresponding p-values
@@ -132,25 +146,24 @@ split(detP,pheno$sex) %>% sapply(median)
 #' Almost all of the 537 chromosome probes are called detected in the males whereas
 #' among females 106 probes are detected on average.
 #'
-#' **QUESTION:** Excluding the Y chromosome and missing probes, what is the percentage
+#' QUESTION: Excluding the Y chromosome and missing probes, what is the percentage
 #' of undetected (0.01 cut-off) probes in the first sample. (Use the `table`) function.
-
-
+#' ANSWER: 9546/855830, roughly 1.1%
 
 # ------------------------
 #' ### Dye-bias correction
 #' Infinium BeadChips use two fluorescent dyes that are linked to the nucleotides
-#' used in the the single-base extension step. A and T nucleotides use are linked
+#' added during the the single-base extension step. A and T nucleotides are linked
 #' with a red dye (the red color channel), G and C nucleotides are linked with a
 #' green dye (green color channel). Uncorrected data usually feature higher
 #' intensities in the red color channel, the so-called dye bias. For probes of
 #' Infinium type II design, which use separate color channels to measure the
 #' methylated and unmethylated signal, this results in a shifted distribution of
-#' betavalues. (Probes of Infinium design type I are not affected, as they measure
-#' both signals in the same color channel.)
+#' beta values. Probes of Infinium design type I are less affected, as they measure
+#' both signals in the same color channel.
 #'
 #' `correct_dye_bias()` adjusts the green color channel using the red color channel
-#' as reference.
+#' as reference. The adjustment is performed on the log scale.
 
 meth %>% dont_normalize                      -> with_bias
 meth %>% correct_dye_bias %>% dont_normalize -> corrected
@@ -163,15 +176,15 @@ meth$manifest$channel[238:240]
 with_bias[238:240,1:3] %>% round(4)
 corrected[238:240,1:3] %>% round(4)
 
-#' **QUESTION:** Why are the beta values for cg27050229 unchanged?
-
+#' QUESTION: Why are the beta values for cg27050229 unchanged?
+#' ANSWER: Because the red color channel is used as reference.
 
 #' Plotting beta values for heterozygous SNPs, we can observe the dye bias as a
 #' deviation from 0.5. For the corrected data, the middle peak aligns with 0.5
 snps = meth$manifest[probe_type=="rs" & channel=="Both"]$index
 
-plot (density(with_bias[snps,14],na.rm=TRUE,bw=0.1),col=1)
-lines(density(corrected[snps,14],na.rm=TRUE,bw=0.1),col=2)
+plot (density(with_bias[snps,31],na.rm=TRUE,bw=0.1),col=1)
+lines(density(corrected[snps,31],na.rm=TRUE,bw=0.1),col=2)
 abline(v=0.5,lty=3)
 legend("topleft",col=1:2,legend=c("with_bias","corrected"),lwd=1)
 
@@ -220,9 +233,9 @@ beta = dont_normalize(meth)
 
 # ------------------------
 #' ### SNP outliers
-#' `snp_outliers()` returns the average log odds of belonging to the outlier
-#' component across all SNP probes. Here a cut-off of -4 is used
-#' greater than -4 for exclusion.
+#' `snp_outliers()` returns the average log odds of a SNP probe belonging to
+#' the outlier component of the mixture model. Here a cut-off of -4 is used
+#' as threshold for exclusion.
 snps = meth$manifest[probe_type=="rs"]$index
 genotypes = call_genotypes(beta[snps,],learn=FALSE)
 pheno$outlier = snp_outliers(genotypes)
@@ -230,12 +243,7 @@ pheno$outlier = snp_outliers(genotypes)
 stripchart(pheno$outlier,method="jitter",pch=4)
 abline(v=-4,lty="dotted",col=2)
 
-#' **QUESTION:** What is the ID of the sample that appears to be an outlier? 
-#'
-
-#' Mark failing samples for exclusion
-# pheno[outlier > -4,exclude:=TRUE]
-
+#' None of the samples fail this QC check
 
 
 # ------------------------
@@ -248,8 +256,7 @@ pheno$donor_id = enumerate_sample_donors(genotypes)
 pheno[,n:=.N,by=donor_id]
 pheno[n>1,.(gsm,donor_id)]
 
-#' **QUESTION:** How many different donors are there?
-#'
+#' None of the samples fail this QC check
 
 # ------------------------
 #' ### Principal component analysis
@@ -259,8 +266,8 @@ pheno[n>1,.(gsm,donor_id)]
 
 set.seed(292846330)
 
-#' We will apply PCA to the matrix of beta but without the probes targeting the
-#' allosomes. Exclude SNP probes as well.
+#' We will apply PCA to the matrix of beta values but without SNPs and the probes
+#' targeting the allosomes.
 chrXY =  meth$manifest[ chr %in% c("X","Y") | probe_type == "rs"]$index
 pcs = beta[-chrXY,]
 pcs = pcs - rowMeans(pcs)
@@ -292,13 +299,13 @@ pheno[gsm=="GSM8002189",exclude:=TRUE]
 #' This quality check will only apply in case of blood samples (blood is, however,
 #' one of the most commonly studied tissues). The function `estimateLC()`
 #' implements the Houseman method (doi.org/10.1186/1471-2105-13-86) to predict the
-#' leukocyte composition. The user has the choice between various sets of model
-#' parameters trained on various reference datasets (see `?estimateLC` for a list
+#' leukocyte composition. Further choices include a more granular 15 cell type model
+#' derived from the Health and Retirement study (see `?estimateLC` for a list
 #' of options). The function operates on the matrix of beta values.
 
 
 #' we are using the Reinius reference dataset
-LC = estimateLC(beta,ref="Reinius")
+LC = estimateLC(beta,ref="Reinius", constrained = TRUE)
 
 #' `LC` is a data.table. We can easily add to `pheno`
 pheno = cbind(pheno,LC)
@@ -306,14 +313,14 @@ pheno = cbind(pheno,LC)
 #' Plot the proportions of CD4 versus (the column named `CD4`)
 plot(sort(pheno$CD4),ylim=c(0,1))
 
-#' We observe one outlier, a sample with a CD4 proportion close to 100%
+#' We observe one outlier, a sample with a CD4 proportion of 100%
 pheno[which.max(CD4),.(gsm,exclude)]
 #' This is actually a sample of purified CD4 cells. Flag for exclusion.
 pheno[gsm=="GSM5322148",exclude:=TRUE]
 
 
 
-#' Let's confirm that the leukocyte composition is a confounded with smoking status
+#' Let's confirm that the leukocyte composition is confounded with smoking status
 #' LC stratified by smoking status
 LC$smoker = pheno$smoker
 LC = melt(LC,value.name="proportion",variable.name="cell_type",id.vars="smoker")
@@ -323,6 +330,8 @@ boxplot(proportion ~ smoker+cell_type,LC,col=1:2,
 axis(1,at=seq(from=1.5, to=11.5,by=2),adj=1,labels=unique(LC$cell_type))
 legend("topright",c("Non-smoker","Smoker"),pch=15,bty='n',col=1:2)
 
+#' We can see a difference in the proportions of natural killer cells between
+#' smokers and non-smokers
 
 # ------------------------
 #' ### Clean up
