@@ -45,6 +45,7 @@ suppressMessages(library(IlluminaHumanMethylation450kanno.ilmn12.hg19))
 suppressMessages(library(IlluminaHumanMethylationEPICmanifest))
 suppressMessages(library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19))
 suppressMessages(library(FlowSorted.Blood.450k))
+suppressMessages(library(FlowSorted.Blood.EPIC))
 options(warn=0)
 idat_files = paste0("data/",pheno$gsm)
 
