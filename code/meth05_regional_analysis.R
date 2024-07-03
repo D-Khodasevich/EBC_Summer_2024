@@ -131,7 +131,7 @@ EWAS.limma$chr <- as.numeric(gsub("chr", "", EWAS.limma$chr)) # chr as numeric
 # read output
 combp.result = read.csv('combp/resu_combp.csv')
 combp.result
-# regions chr2:233284401-233284934, chr6:29599011-29599390, and chr5:373298-373378 overlap with DMRcate results
+# Regions chr1: 92946131-92947588, chr2: 233284661-233285454, chr2: 27665079-27665711, chr3: 21792434-21793157, chr5: 373299-373887, chr6: 32120773-32121261, and chr14: 106329158-106330538 overlap with DMRcate results. 
 # comb-p has higher power to detect small effect sizes, but increased Type I error; see [Malid et al. Briefings in Bioinformatics 2019](https://academic.oup.com/bib/article/20/6/2224/5096828)
 
 #' Other popular options for conducting Regional DNA methylation analysis in R are Aclust and bumphunter
