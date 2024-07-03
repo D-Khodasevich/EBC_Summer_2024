@@ -76,6 +76,7 @@ pheno[,.(
 par(mfrow=c(1,2))
 boxplot(CpG.level  ~ smoker,data=pheno,main=paste0("Beta-values\n",CpG.name), col=c("blue","red"))
 boxplot(CpG.mlevel ~ smoker,data=pheno,main=paste0("M-values\n"   ,CpG.name), col=c("blue","red"))
+dev.off()
 
 #' linear regression on m-values
 lm(CpG.mlevel ~ smoker,data=pheno) %>% summary %>% coef
@@ -91,7 +92,7 @@ lm(CpG.mlevel ~ smoker,data=pheno) %>% summary %$% adj.r.squared
 #'see [Barfield et al. Bioinformatics 2012](http://www.ncbi.nlm.nih.gov/pubmed/22451269)  
 
 #' Smoking as predictor  
-#' note that CpGassoc is quite fast for running almost half million regressions!
+#' note that CpGassoc is quite fast for running almost a million regressions!
 
 pheno[,smoke_dummy:=ifelse(smoker=="smoker",1,0)]
 
@@ -123,7 +124,7 @@ table(results1$results[,5] < 0.05)
 results2 = cpg.assoc(
            betas.clean
           ,pheno$smoke_dummy
-          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO,GR)])
+          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO)])
           )
 
 print(results2)
@@ -133,7 +134,7 @@ print(results2)
 results3 <- cpg.assoc(
            betas.clean
           ,pheno$smoke_dummy
-          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO,GR)])
+          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO)])
           ,logit.transform=TRUE
           )
 
@@ -188,7 +189,7 @@ qqman::manhattan(datamanhat,chr="chr",bp="mapinfo",p="P.value",snp="probe_id"
 suppressMessages(library(limma,minfi))
 
 #' First we need to define a model
-model <- model.matrix( ~smoker+sex+CD4+CD8+NK+B+MO+GR,data=pheno)
+model <- model.matrix( ~smoker+sex+CD4+CD8+NK+B+MO,data=pheno)
 EWAS.limma <- eBayes(lmFit(betas.clean, design=model))
 Top<-topTable(EWAS.limma, coef=2, number=Inf, sort.by="p")[1:10,]
 Top
@@ -203,7 +204,6 @@ Top<-cbind(Top[,1:5], Annot.Tops)
 Top$chr = as.numeric(gsub("chr", "", Top$chr))
 Top[order(Top$chr,Top$pos),c(1,6,7,8,9,10)] 
 
-#' cleanup
-rm(nCpG,CpG.name,datamanhat,lambda,results1,results2,results3,Annot.Tops,EWAS.limma,Top)
-gc()
+#' clear environment
+rm(list = ls()); gc()
 #' End of script 04

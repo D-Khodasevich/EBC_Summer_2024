@@ -24,7 +24,7 @@ betas.clean <- beta[manifest[manifest$probe_type=="cg" & !chr %in% c("X","Y")]$i
 #' Impute missing Beta-values (varFit will produce an error with missingness)
 sum(is.na(betas.clean))
 
-# the champ.impute function prints a lot of information when running, so we'll use this function to supress the progress messages
+# the champ.impute function prints a lot of information when running, so we'll use this function to suppress the progress messages
 hush=function(code){
   sink("NUL") # use /dev/null in UNIX
   tmp = code
@@ -36,7 +36,7 @@ betas.impute <- betas.impute$beta
 
 #' coef parameter in varFit states which columns of design matrix correspond to the intercept and variable of interest
 #' If Beta-values are used, a lofit transformation is performed within the varFit function
-model <- model.matrix( ~smoker+sex+CD4+CD8+NK+B+MO+GR,data=pheno)
+model <- model.matrix( ~smoker+sex+CD4+CD8+NK+B+MO,data=pheno)
 head(model)
 EWAS.diffVar <- varFit(betas.impute, design=model, coef=c(1,2))
 Top.diffVar <- topVar(EWAS.diffVar, coef=2, number=10, sort =TRUE)
@@ -53,7 +53,7 @@ Top.diffVar$chr <- as.numeric(gsub("chr", "", Top.diffVar$chr))
 Top.diffVar[,c(2,6)] <- round(Top.diffVar[,c(2,6)],2)
 Top.diffVar[order(Top.diffVar$chr, Top.diffVar$pos),c(2,5,6,7,10,11)]
 
-#' Although no CpGs meet FDR significance, we can see differences in variability among the top sites
+#' We can see differences in variability among the top sites
 cpg1 <- data.frame(id = colnames(betas.impute), beta = betas.impute[rownames(betas.impute) == 'cg01208126',])
 cpg1 <- merge(cpg1, pheno[,c('gsm', 'smoker')], by.x = 'id', by.y = 'gsm') 
 cpg1$smoker <- as.numeric(factor(cpg1$smoker))
@@ -76,7 +76,7 @@ rm(Annot.Top.diffVar,Top.diffVar,EWAS.diffVar,betas.impute,cpg1,cpg2);gc()
 suppressMessages(library(DMRcate)) # Popular package for regional DNA methylation analysis
 #'Regions are now agglomerated from groups of significant probes 
 #'Let's run the regional analysis using the Beta-values from our preprocessed data
-myannotation <- cpg.annotate("array", na.omit(betas.clean), analysis.type="differential",arraytype="EPIC",
+myannotation <- cpg.annotate("array", na.omit(betas.clean), analysis.type="differential",arraytype="EPICv1",
                              what="Beta",design=model, coef=2)
 # set analysis.type = "diffVar" to return differentially variable methylated regions                           
 
@@ -102,8 +102,7 @@ names(cols) = levels(pheno$smoker)[pheno$smoker]
 #'Draw the plot a DMR\
 #+ fig.width=8, fig.height=6, dpi=300
 DMR.plot(ranges=results.ranges, dmr=2, CpGs=betas.clean, phen.col=cols, what = "Beta",
-         arraytype = "EPIC", pch=16, toscale=TRUE, plotmedians=TRUE, 
-         genome="hg19", samps=1:nrow(pheno))
+         arraytype = "EPICv1", genome="hg19")
 
 #'Clean data
 rm(dmrcoutput.smoking,myannotation);gc()
@@ -165,6 +164,7 @@ pheno$sex<-ifelse(pheno$sex=="m",1,2)
 result <- epismoker(dataset=betas.clean, samplesheet = pheno, method = "SSt")
 # Let's look how well the prediction performed
 table(pheno$smoker,result$PredictedSmokingStatus)
-rm(list = ls());gc()
 
+#' Clear environment 
+rm(list = ls());gc()
 #' End of script 05

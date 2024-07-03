@@ -87,27 +87,29 @@ plotBetasByType(    rcp(processed)[,1],probeTypes=getAnnotation(processed))
 #' proportions with `minfi` as the user-provided dataset is normalized together
 #' with the reference dataset of purified cell types.
  
-minfi.LC = estimateCellCounts(rgset,compositeCellType="Blood")
+minfi.LC = estimateCellCounts2(rgset,compositeCellType="Blood")
+minfi.LC = minfi.LC$prop
 
 #' **QUESTION:** What normalization is used by default?
 #'
 #' **QUESTION:** Proportions for which cell types can be estimated
 #' when `compositeCellType=="CordBlood"`?
 #'
-#' Comparison with `ewastools` shows that the estimates are not indentical but
+#' Comparison with `ewastools` shows that the estimates are not identical but
 #' highly correlated
 ewastools.LC = ewastools::estimateLC(beta,ref="Reinius")
 
 cor(ewastools.LC$CD4,minfi.LC[,"CD4T"] )
-cor(ewastools.LC$GR ,minfi.LC[,"Gran"] )
+cor(ewastools.LC$GR ,minfi.LC[,"Neu"] )
 cor(ewastools.LC$MO ,minfi.LC[,"Mono"] )
 cor(ewastools.LC$B  ,minfi.LC[,"Bcell"])
 
 par(mfrow = c(2, 2))
 plot(ewastools.LC$CD4,minfi.LC[,"CD4T"])
-plot(ewastools.LC$GR ,minfi.LC[,"Gran"] )
+plot(ewastools.LC$GR ,minfi.LC[,"Neu"] )
 plot(ewastools.LC$MO ,minfi.LC[,"Mono"] )
 plot(ewastools.LC$B  ,minfi.LC[,"Bcell"])
+dev.off()
 
 #' In case you have samples measured on both the 450K and EPIC chips, `minfi` can
 #' virtually convert them in both directions.  
@@ -131,3 +133,6 @@ table(detP1[chrY,] < 0.05)
 #' ... whereas `detectionP.minfi` from `ewastools` results in a more accurate
 #' classification
 table(detP2[chrY,] < 0.05)
+
+#' clear environment
+rm(list = ls()); gc()

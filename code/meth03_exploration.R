@@ -124,4 +124,7 @@ wilcox.test(Online$DNAmPACKYRS ~ pheno$smoker)
 boxplot(Online$DNAmTLAdjAge ~pheno$smoker, col=c("blue","red"))
 t.test(Online$DNAmTLAdjAge ~ pheno$smoker)
 
+#' clear environment
+rm(list = ls()); gc()
+
 #' End of script 03

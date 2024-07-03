@@ -351,3 +351,5 @@ manifest = copy(meth$manifest)
 #' running the script locally, you should un-comment the next line
 #' in order to save the results to be re-used in the following scripts).
 # save(pheno,manifest,beta,file="data/processed.rda")
+
+rm(list = ls()); gc()
