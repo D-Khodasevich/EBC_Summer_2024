@@ -4,14 +4,14 @@ This repository contains R scripts for the <a href="[https://www.publichealth.co
 
 ## Data lab output
 
-<a href="https://D-Khodasevich.github.io/EBC_Summer_2024/markdown/meth01_process_data.html">Lab 1: Importing data and data processing</a> 
+Lab 1: Importing data and data processing
 
-<a href="https://D-Khodasevich.github.io/EBC_Summer_2024/markdown/meth02_minfi_pipeline.html">Lab 2: Minfi pipeline</a> 
+Lab 2: Minfi pipeline
 
-<a href="https://D-Khodasevich.github.io/EBC_Summer_2024/markdown/meth03_exploration.html">Lab 3: Data exploration</a> 
+Lab 3: Data exploration
 
-<a href="https://D-Khodasevich.github.io/EBC_Summer_2024/markdown/meth04_analyze_data.html">Lab 4: EWAS</a> 
+Lab 4: EWAS
 
-<a href="https://D-Khodasevich.github.io/EBC_Summer_2024/markdown/meth05_regional_analysis.html">Lab 5: Regional analysis</a> 
+Lab 5: Regional analysis
 
-<a href="https://D-Khodasevich.github.io/EBC_Summer_2024/markdown/meth06_GEOanalysis.html">Lab 6: Analysis of GEO data</a> 
+Lab 6: Analysis of GEO data
