@@ -18,21 +18,21 @@ pheno = fread("data/pheno.csv")
 pheno
 
 #' Column `gsm` is the sample ID (GEO acession) as well as the first part of the
-#' file name. For each sample there are two files, `$$$_Red.idat.gz` and
-#' `$$$_Grn.idat.gz`, containing fluorescence intensities in the red and green
+#' file name. For each sample there are two files, `$$$_Red.idat(.gz)` and
+#' `$$$_Grn.idat(.gz)`, containing fluorescence intensities in the red and green
 #' color channel, respectively. Import the data using `read_idats`. Provide only
 #' the `$$$` part of the file name. Store in object `meth`.
 meth = read_idats("data/" %s+% pheno$gsm)
 
 
-#' `meth` is a list. Take a look at the some of the list elements
+#' `meth` is a list. Take a look at the some of the list items
 names(meth)
 
 #' Which platform was used.
 meth$platform
 
 #' `manifest` is a data.table with information about all the probes on the chip
-meth$manifest[4001:4010]
+meth$manifest[4021:4030]
 
 #' For example, `probe_id` is a unique identifier for each probe. The combination
 #' of `chr` and `mapinfo` gives the genomic coordinates of the targeted loci.
@@ -43,10 +43,10 @@ meth$manifest[4001:4010]
 #' ANSWER: There are also CHH sites and SNP probes
 
 #' The column `channel` tells us the color channel and Infinium probe design type.
-#' "Grn" and "Red" imply Infinium Type I, "Both" implies Type II.
+#' "Grn" and "Red" denote Infinium Type I, "Both" denotes Type II.
 #'
-#' `addressU` and `addressM` are the unique identifier of the beads (a bead is not
-#' is not the same as a probe).
+#' `addressU` and `addressM` are the unique identifier of the beads (a probe
+#' consists of one or two beads).
 #'
 #' QUESTION: Why is the column `addressM` missing for entries with
 #' `channel=="Both"`?
@@ -56,8 +56,8 @@ meth$manifest[4001:4010]
 #' Some columns (`index`,`OOBi`,`Ui`,`Mi`) are used for the internal workings of
 #' the `ewastools` package and not of interest for the user
 
-#' Fluorescence intensities observed at the bead locations are stores in
-#' `M` (methylated) and `U` (unmethylated) (`U`).
+#' Fluorescence intensities observed at the bead locations are stored in list
+#' items `M` (methylated) and `U` (unmethylated) (`U`).
 dim(meth$M)
 #'The matrix has 865,918 rows, one for each probe, and 33 columns, one for each
 #' sample
@@ -68,26 +68,27 @@ meth$M[238:240,1:3]
 
 #' QUESTION: Comparing corresponding entries across `U` and `M` above, what can
 #' you infer about these loci?
-#' ANSWER: For the middle probe, the methylated intensities are much higher than the
-#' unmethylated intensities. This probe in methylated across the three samples
+#' ANSWER: For the middle probe, the unmethylated intensities are much higher than
+#' the methylated intensities. This probe is methylated across the three samples
 
 #' Because of the random assembly of the chips, the copy number can vary for each
-#' bead, and the values in `U` and `M` actually are averages. Copy numbers are
+#' bead, and the values in `U` and `M` are actually averages. Copy numbers are
 #' stored in `V` (corresponding to `U`) and `N` (corresponding to `M`). For some
 #' beads the copy number can be zero.
 dim(meth$N)
 meth$N[238:240,1:3]
 
 #' QUESTION: How many probes are missing in the first sample?
-#' ANSWER: 5 probes has no beads present for either the unmethylated or methylated type
+#' ANSWER: 5 probes have no beads present for either the unmethylated or
+#' methylated type
  
-#' QUESTION: For type II probes, the entries in `N` and `V` are always the same. Why?
-#' ANSWER: Because the same beads are used to mesaure methylated and unmethylated signal
+#' QUESTION: Why are for type II probes the entries in `N` and `V` are always the same.
+#' ANSWER: Because the same beads are used to measure methylated and unmethylated signal
 
 #' The `meth` list includes more elements, among them matrices and a manifest
 #' for control probes. The control probes don't target CpG sites, but are used to
-#' monitor the various experimental steps or are used for preprocessing. We will make use
-#' of them below for quality control.
+#' monitor the various experimental steps or are used for pre-processing. We will
+#' make use of them for quality control.
 
 
 
@@ -98,11 +99,11 @@ meth$N[238:240,1:3]
 pheno[,exclude:=FALSE]
 
 #' ### Control metrics
-#' The first quality check evaluates 17 control metrics which are describe in the
+#' The first quality check evaluates 17 control metrics which are described in the
 #' BeadArray Controls Reporter Software Guide from Illumina.
 
 #' `control_metrics()` calculates the control metrics from the control probes
-#' `sample_failure()` evaluates control metrics against thresholds
+#' `sample_failure()` evaluates control metrics against pre-defined thresholds
 
 meth %>% control_metrics %>% sample_failure -> pheno$failed
 #' Here we are making use of the pipe operator (%>%) from the `magrittr` package.
@@ -123,9 +124,9 @@ meth %>% control_metrics %>% sample_failure -> pheno$failed
 # ------------------------
 #' ### Detection p-values
 
-#' `detectionP()` calculates detecton p-values and stores them as in a new list
-#' element `detP`. Detection p-values should be based on raw data, i.e., before
-#' preprocessing such as dye-bias correction. We will use `mask()` later to drop
+#' `detectionP()` calculates detection p-values and stores them in a new list
+#' item `detP`. Detection p-values should be based on raw data, i.e., before
+#' pre-processing such as dye-bias correction. We will use `mask()` later to drop
 #' those observations with p-values above a specified cut-off
 meth = ewastools::detectionP(meth)
 
@@ -143,12 +144,12 @@ detP = colSums(detP<0.01,na.rm=TRUE)
 boxplot(split(detP,pheno$sex),ylab="# of detected Y chromosome probes")
 split(detP,pheno$sex) %>% sapply(median)
 
-#' Almost all of the 537 chromosome probes are called detected in the males whereas
-#' among females 106 probes are detected on average.
+#' Almost all of the 537 chromosome probes are called detected in the males
+#' whereas among females 106 probes are detected on average.
 #'
 #' QUESTION: Excluding the Y chromosome and missing probes, what is the percentage
-#' of undetected (0.01 cut-off) probes in the first sample. (Use the `table`) function.
-#' ANSWER: 9546/855830, roughly 1.1%
+#' of undetected (0.01 cut-off) probes in the first sample. Use `table()`.
+#' ANSWER: 9546 / (9546 + 855830), roughly 1.1%
 
 # ------------------------
 #' ### Dye-bias correction
@@ -183,8 +184,8 @@ corrected[238:240,1:3] %>% round(4)
 #' deviation from 0.5. For the corrected data, the middle peak aligns with 0.5
 snps = meth$manifest[probe_type=="rs" & channel=="Both"]$index
 
-plot (density(with_bias[snps,31],na.rm=TRUE,bw=0.1),col=1)
-lines(density(corrected[snps,31],na.rm=TRUE,bw=0.1),col=2)
+plot (density(with_bias[snps,31], na.rm=TRUE, bw=0.1),col=1)
+lines(density(corrected[snps,31], na.rm=TRUE, bw=0.1),col=2)
 abline(v=0.5,lty=3)
 legend("topleft",col=1:2,legend=c("with_bias","corrected"),lwd=1)
 
@@ -200,13 +201,14 @@ rm(corrected,with_bias)
 #' `check_sex()` computes the normalized average total fluorescence intensity of
 #' probes targeting the X and Y chromosomes, and `predict_sex()` infers the sex of
 #' the sample donors based on this information. This check should be applied after
-#' dye-bias correction but before undetected probes are masked.
-pheno[,c("X","Y"):=check_sex(meth)]
-pheno[,predicted_sex := predict_sex(X,Y,which(sex=="m"),which(sex=="f"))]
+#' dye-bias correction but before undetected probes are masked as the latter step
+#' drops the Y chromosome probes among females
+pheno[, c("X", "Y") := check_sex(meth)]
+pheno[, predicted_sex := predict_sex(X, Y, which(sex=="m"), which(sex=="f"))]
 
 #' Are there instances where the sex inferred from the methylation data does not
 #' match the information in the recorded meta data?
-pheno[sex!=predicted_sex,.(gsm,sex,predicted_sex)]
+pheno[sex != predicted_sex, .(gsm, sex, predicted_sex)]
 
 #' This is indeed the case for the sample with the ID GSM3229163. This most
 #' likely means that this sample was mislabeled.
@@ -215,15 +217,15 @@ pheno[sex!=predicted_sex,.(gsm,sex,predicted_sex)]
 pheno[sex!=predicted_sex,exclude:=TRUE]
 
 #' Let's also plot these data
-plot(Y~X,data=pheno,type="n")
-text(Y~X,labels=sex,col=ifelse(sex=="m",2,1),data=pheno)
+plot(Y~X, data=pheno, type="n")
+text(Y~X, labels=sex, col=ifelse(sex=="m", 2, 1), data=pheno)
 #' The mislabeled sample can be easily spotted as it falls into the wrong cluster.
 
 
 # ------------------------
 #' Before the next QC steps, we should mask undetected probes. Here we use a
 #' cut-off of 0.01
-meth = mask(meth,0.01)
+meth = mask(meth, 0.01)
 
 #' Now we can compute a "clean" matrix of beta values. Undetected probes are
 #' set to NA
@@ -237,11 +239,11 @@ beta = dont_normalize(meth)
 #' the outlier component of the mixture model. Here a cut-off of -4 is used
 #' as threshold for exclusion.
 snps = meth$manifest[probe_type=="rs"]$index
-genotypes = call_genotypes(beta[snps,],learn=FALSE)
+genotypes = call_genotypes(beta[snps, ], learn=FALSE)
 pheno$outlier = snp_outliers(genotypes)
 
-stripchart(pheno$outlier,method="jitter",pch=4)
-abline(v=-4,lty="dotted",col=2)
+stripchart(pheno$outlier, method="jitter", pch=4, xlim = c(-6, -3.5))
+abline(v=-4, lty="dotted", col=2)
 
 #' None of the samples fail this QC check
 
@@ -279,13 +281,13 @@ pcs = pcs$u
 pheno$pc1 = pcs[,1]
 pheno$pc2 = pcs[,2]
 
-plot(pc2~pc1,col=ifelse(sex=="m",2,1),data=pheno)
-text(pc2~pc1,labels=pheno[31]$gsm,data=pheno[31],pos=2,offset=-4,col=2)
-text(pc2~pc1,labels=pheno[32]$gsm,data=pheno[32],pos=2,offset=-4,col=2)
+plot(pc2~pc1, col=ifelse(sex=="m",2,1), data=pheno)
+text(pc2~pc1, labels=pheno[31]$gsm, data=pheno[31], pos=4,offset=1, col=2)
+text(pc2~pc1, labels=pheno[32]$gsm, data=pheno[32], pos=4,offset=1, col=2)
 
-#' GSM8002189 is actually a Nucleus Accumbens tissue sample from another GEO dataset. It
-#' dominates the first principal component and should be excluded as it could
-#' drastically change the results of the downstream analysis.
+#' GSM8002189 is actually a Nucleus Accumbens tissue sample from another GEO
+#' dataset. It dominates the first principal component and should be excluded as
+#' it could drastically change the results of the downstream analysis.
 
 pheno[gsm=="GSM8002189",exclude:=TRUE]
 
@@ -303,20 +305,22 @@ pheno[gsm=="GSM8002189",exclude:=TRUE]
 #' derived from the Health and Retirement study (see `?estimateLC` for a list
 #' of options). The function operates on the matrix of beta values.
 
+# Option "HRS" provides proportions of 15 cell types
+colnames(estimateLC(beta, ref="HRS"))
 
 #' we are using the Reinius reference dataset
-LC = estimateLC(beta,ref="Reinius", constrained = TRUE)
+LC = estimateLC(beta, ref="Reinius", constrained = TRUE)
 
 #' `LC` is a data.table. We can easily add to `pheno`
-pheno = cbind(pheno,LC)
+pheno = cbind(pheno, LC)
 
 #' Plot the proportions of CD4 versus (the column named `CD4`)
-plot(sort(pheno$CD4),ylim=c(0,1))
+plot(sort(pheno$CD4), ylim=c(0,1))
 
 #' We observe one outlier, a sample with a CD4 proportion of 100%
-pheno[which.max(CD4),.(gsm,exclude)]
+pheno[which.max(CD4), .(gsm,exclude)]
 #' This is actually a sample of purified CD4 cells. Flag for exclusion.
-pheno[gsm=="GSM5322148",exclude:=TRUE]
+pheno[gsm=="GSM5322148", exclude:=TRUE]
 
 
 
@@ -342,7 +346,7 @@ pheno = pheno[keep]
 beta  = beta[,keep]
 
 #' Keep only the columns relevant for downstream analysis
-pheno = pheno[,.(gsm,smoker,Sentrix_ID,row,col,sex,age,CD4,CD8,NK,MO,GR,B)]
+pheno = pheno[,.(gsm, smoker, Sentrix_ID, row,col, sex,age, CD4,CD8,NK,MO,GR,B)]
 
 #' Also keep a copy of the manifest
 manifest = copy(meth$manifest)
