@@ -1,4 +1,4 @@
-.libPaths( c('.Rpackages',.libPaths() ) )
+.libPaths( c('.Rpackages', .libPaths() ) )
 
 #' `minfi` is one of the most commonly used R packages for working with Infinium
 #' Methylation BeadChips. In the following we import and preprocess the same dataset
@@ -17,7 +17,7 @@ pheno = fread("data/pheno_clean.csv")
 library(ewastools)
 
 beta =
-	paste0("data/",pheno$gsm) %>% # idat file paths
+	paste0("data/", pheno$gsm) %>% # idat file paths
 	read_idats(quiet=TRUE) %>%    # import fluorescence intensities
 	detectionP %>%                # compute detection p-values
 	mask(0.01) %>%                # set undetected probes to missing
@@ -26,9 +26,9 @@ beta =
 
 dim(beta)
 
-#' There are some name collisions between `minfi` and `ewastools`, i.e., function 
-#' definitions with the same name. We therefore detach `ewastools`, i.e., the
-#' inverse of `library()`, before we proceed.
+#' There are some name collisions between `minfi` and `ewastools` (function 
+#' definitions with the same name). We therefore detach `ewastools` (the
+#' inverse of `library()`), before we proceed.
 detach("package:ewastools")
 
 #' In order to still be able to call functions from a package that is not loaded
@@ -47,7 +47,7 @@ suppressMessages(library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19))
 suppressMessages(library(FlowSorted.Blood.450k))
 suppressMessages(library(FlowSorted.Blood.EPIC))
 options(warn=0)
-idat_files = paste0("data/",pheno$gsm)
+idat_files = paste0("data/", pheno$gsm)
 
 #' importing idat files, result is a RGChannelSet
 rgset = read.metharray(basenames=idat_files)
@@ -72,12 +72,12 @@ processed = preprocessIllumina(rgset[,1:2])
 
 #' Due to their design, Type II probes feature more background noise, shifting the
 #' peaks for completely (un)methylated Cpg sites inwards
-plotBetasByType(getBeta(processed)[,1],probeTypes=getAnnotation(processed))
+plotBetasByType(getBeta(processed)[,1], probeTypes=getAnnotation(processed))
 
 #' `rcp()` (regression on correlated probes) uses Type I probes to shift the
 #' distribution of beta-values of Type II probes. Compared to above plot, the peaks
 #' should be aligned now.
-plotBetasByType(    rcp(processed)[,1],probeTypes=getAnnotation(processed))
+plotBetasByType(    rcp(processed)[,1], probeTypes=getAnnotation(processed))
 
 
 #' ## Cell type prediction
@@ -87,7 +87,7 @@ plotBetasByType(    rcp(processed)[,1],probeTypes=getAnnotation(processed))
 #' proportions with `minfi` as the user-provided dataset is normalized together
 #' with the reference dataset of purified cell types.
  
-minfi.LC = estimateCellCounts2(rgset,compositeCellType="Blood")
+minfi.LC = estimateCellCounts2(rgset, compositeCellType="Blood")
 minfi.LC = minfi.LC$prop
 
 #' **QUESTION:** What normalization is used by default?
@@ -97,42 +97,23 @@ minfi.LC = minfi.LC$prop
 #'
 #' Comparison with `ewastools` shows that the estimates are not identical but
 #' highly correlated
-ewastools.LC = ewastools::estimateLC(beta,ref="Reinius")
+ewastools.LC = ewastools::estimateLC(beta, ref="Reinius")
 
-cor(ewastools.LC$CD4,minfi.LC[,"CD4T"] )
-cor(ewastools.LC$GR ,minfi.LC[,"Neu"] )
-cor(ewastools.LC$MO ,minfi.LC[,"Mono"] )
-cor(ewastools.LC$B  ,minfi.LC[,"Bcell"])
+cor(ewastools.LC$CD4, minfi.LC[,"CD4T"] )
+cor(ewastools.LC$GR , minfi.LC[,"Neu"]  )
+cor(ewastools.LC$MO , minfi.LC[,"Mono"] )
+cor(ewastools.LC$B  , minfi.LC[,"Bcell"])
 
 par(mfrow = c(2, 2))
-plot(ewastools.LC$CD4,minfi.LC[,"CD4T"])
-plot(ewastools.LC$GR ,minfi.LC[,"Neu"] )
-plot(ewastools.LC$MO ,minfi.LC[,"Mono"] )
-plot(ewastools.LC$B  ,minfi.LC[,"Bcell"])
+plot(ewastools.LC$CD4, minfi.LC[,"CD4T"] )
+plot(ewastools.LC$GR , minfi.LC[,"Neu"]  )
+plot(ewastools.LC$MO , minfi.LC[,"Mono"] )
+plot(ewastools.LC$B  , minfi.LC[,"Bcell"])
 dev.off()
 
 #' In case you have samples measured on both the 450K and EPIC chips, `minfi` can
 #' virtually convert them in both directions.  
-convertArray(rgset,outType="IlluminaHumanMethylation450k")
-
-#' Detection p-values
-#' One of the improvements mentioned in the presentation are the more stringent
-#' detection p-values. Below we calculate these using both packages for a sample
-#' from a female donor. We then count how many Y-chromosome probes are called
-#' detected for the same cut-off.
-
-detP1 = detectionP(rgset[,5]) # Sample #5 is female
-detP2 = ewastools::detectionP.minfi(rgset)
-detP2 = as.matrix(detP2[,5])
-
-chrY = getAnnotation(methylset)$chr == "chrY"
-
-#' Most Y chromosome probes are called detected using the minfi approach
-table(detP1[chrY,] < 0.05)
-
-#' ... whereas `detectionP.minfi` from `ewastools` results in a more accurate
-#' classification
-table(detP2[chrY,] < 0.05)
+convertArray(rgset, outType="IlluminaHumanMethylation450k")
 
 #' clear environment
 rm(list = ls()); gc()
