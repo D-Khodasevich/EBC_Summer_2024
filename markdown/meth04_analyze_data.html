@@ -1673,7 +1673,10 @@ al. Bioinformatics 2012</a></p>
 note that CpGassoc is quite fast for running almost a million
 regressions!</p>
 <pre class="r"><code>pheno[,smoke_dummy:=ifelse(smoker==&quot;smoker&quot;,1,0)]</code></pre>
-<pre class="r"><code>results1 &lt;- cpg.assoc(betas.clean, pheno$smoke_dummy,fdr.cutoff=0.1)</code></pre>
+<p>To save some time, we have already run the following cpg.assoc models
+and are loading the results</p>
+<pre class="r"><code>load(&quot;data/cpg_assoc_results.rda&quot;)</code></pre>
+<pre class="r"><code>#system.time(results1 &lt;- cpg.assoc(betas.clean, pheno$smoke_dummy,fdr.cutoff=0.1))</code></pre>
 <p>there are several components of the results</p>
 <pre class="r"><code>class(results1)</code></pre>
 <pre><code>## [1] &quot;cpg&quot;</code></pre>
@@ -1737,11 +1740,11 @@ CpGassoc)</p>
 <p>EWAS with adjustment for cell types, now we can run the linear
 regression on betas adjusting for cell proportions. Need sex as
 indicator in covariate matrix</p>
-<pre class="r"><code>results2 = cpg.assoc(
-           betas.clean
-          ,pheno$smoke_dummy
-          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO)])
-          )</code></pre>
+<pre class="r"><code>#results2 = cpg.assoc(
+#           betas.clean
+#          ,pheno$smoke_dummy
+#          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO)])
+#          )</code></pre>
 <pre class="r"><code>print(results2)</code></pre>
 <pre><code>## 
 ## The top ten CpG sites were:
@@ -1777,12 +1780,12 @@ indicator in covariate matrix</p>
 Use of M-values reduces heteroscedasticity to meet linear model
 assumptions, see <a href="https://pubmed.ncbi.nlm.nih.gov/21118553/">Du
 P, et al. BMC Bioinformatics. 2010</a>.</p>
-<pre class="r"><code>results3 &lt;- cpg.assoc(
-           betas.clean
-          ,pheno$smoke_dummy
-          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO)])
-          ,logit.transform=TRUE
-          )</code></pre>
+<pre class="r"><code>#results3 &lt;- cpg.assoc(
+#           betas.clean
+#          ,pheno$smoke_dummy
+#          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO)])
+#          ,logit.transform=TRUE
+#          )</code></pre>
 <pre class="r"><code>print(results3)</code></pre>
 <pre><code>## 
 ## The top ten CpG sites were:
