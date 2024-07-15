@@ -96,7 +96,9 @@ lm(CpG.mlevel ~ smoker,data=pheno) %>% summary %$% adj.r.squared
 
 pheno[,smoke_dummy:=ifelse(smoker=="smoker",1,0)]
 
-system.time(results1 <- cpg.assoc(betas.clean, pheno$smoke_dummy,fdr.cutoff=0.1))
+#' To save some time, we have already run the following cpg.assoc models and are loading the results 
+load("data/cpg_assoc_results.rda")
+#system.time(results1 <- cpg.assoc(betas.clean, pheno$smoke_dummy,fdr.cutoff=0.1))
 
 #' there are several components of the results
 class(results1)
@@ -121,22 +123,22 @@ table(results1$results[,5] < 0.05)
 #' 
 #' 
 #' 
-results2 = cpg.assoc(
-           betas.clean
-          ,pheno$smoke_dummy
-          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO)])
-          )
+#results2 = cpg.assoc(
+#           betas.clean
+#          ,pheno$smoke_dummy
+#          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO)])
+#          )
 
 print(results2)
 
 #'using mvalues
 #' Use of M-values reduces heteroscedasticity to meet linear model assumptions, see [Du P, et al. BMC Bioinformatics. 2010](https://pubmed.ncbi.nlm.nih.gov/21118553/). 
-results3 <- cpg.assoc(
-           betas.clean
-          ,pheno$smoke_dummy
-          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO)])
-          ,logit.transform=TRUE
-          )
+#results3 <- cpg.assoc(
+#           betas.clean
+#          ,pheno$smoke_dummy
+#          ,covariates=as.data.frame(pheno[,.(sex,CD8,CD4,NK,B,MO)])
+#          ,logit.transform=TRUE
+#          )
 
 print(results3)
 
