@@ -53,13 +53,13 @@ idat_files = paste0("data/", pheno$gsm)
 rgset = read.metharray(basenames=idat_files)
 rgset
 
-#' `preprocessRaw` computes beta-value based on raw flourescence intensities
+#' `preprocessRaw` computes beta-value based on raw fluorescence intensities
 methylset = preprocessRaw(rgset)
 methylset
 
 #' Many other preprocessing methods are available
 #' 
-#' * `preprocessNoob`: background substraction/correction
+#' * `preprocessNoob`: background subtraction/correction
 #' * `preprocessFunnorm`: optionally includes preprocessNoob
 #' * `preprocessIllumina`: normalization as in GenomeStudio software
 #' * `preprocessQuantile`: quantile normalization stratified by U/M signal and
