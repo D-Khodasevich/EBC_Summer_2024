@@ -85,7 +85,10 @@ plotBetasByType(    rcp(processed)[,1], probeTypes=getAnnotation(processed))
 #' "CordBlood", or "DLPFC" (frontal cortex). Estimates for "Blood" are based on
 #' the Reinius reference dataset. You have to use an `rgset` to estimate cell
 #' proportions with `minfi` as the user-provided dataset is normalized together
-#' with the reference dataset of purified cell types.
+#' with the reference dataset of purified cell types.  
+#' Note: the first time running estimateCellCounts2 locally, you will be prompted 
+#' to create a directory for ExperimentHub. 
+#' Enter "yes" in the console to proceed 
  
 minfi.LC = estimateCellCounts2(rgset, compositeCellType="Blood")
 minfi.LC = minfi.LC$prop
