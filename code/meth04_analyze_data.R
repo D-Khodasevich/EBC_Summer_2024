@@ -174,7 +174,7 @@ datamanhat[order(P.value)][1:7]
 #' Bonferroni threshold
 #' 
 plot(-log10(P.value) ~ effect.size,data=datamanhat,xlab="Estimate",ylab="-log10(p-value)",
-     main="Volcano Plot\nadjusted for cell proportions",xlim = c(-1,1),ylim=c(0,8))
+     main="Volcano Plot\nadjusted for cell proportions",xlim = c(-1,1),ylim=c(0,15))
 abline(h = -log10(0.05/(nCpG)), lty=1, col="#FDE725FF", lwd=2)
 
 #'## Manhattan plot for cell-type adjusted EWAS  
@@ -182,7 +182,7 @@ abline(h = -log10(0.05/(nCpG)), lty=1, col="#FDE725FF", lwd=2)
 datamanhat[,chr:=as.integer(chr)]
 
 qqman::manhattan(datamanhat,chr="chr",bp="mapinfo",p="P.value",snp="probe_id"
-   ,suggestiveline=FALSE, genomewideline = -log10(0.05/(nCpG)),ylim=c(0,10)
+   ,suggestiveline=FALSE, genomewideline = -log10(0.05/(nCpG)),ylim=c(0,15)
    ,main = "Manhattan Plot \n adjusted for cell proportions")
 
 
